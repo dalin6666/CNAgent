@@ -1,0 +1,41 @@
+# Agent Runtime Tree
+
+```text
+examples/
+  run_basic_agent.py
+
+  agent_runtime/
+    __init__.py
+    README.md
+    config.py
+    errors.py
+  events.py
+  schemas.py
+    providers/
+      __init__.py
+      base.py
+      mock_provider.py
+      openai_compatible.py
+  runtime/
+    __init__.py
+    attachments.py
+    budget.py
+    compression.py
+    engine.py
+    fallback.py
+    hooks.py
+    interruption.py
+    mcp.py
+    memory.py
+    skills.py
+    telemetry.py
+  tools/
+    __init__.py
+    base.py
+    builtin_echo.py
+    builtin_glob_search.py
+    builtin_read_file.py
+    legacy_adapter.py
+    permissions.py
+    registry.py
+```

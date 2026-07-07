@@ -1,0 +1,5 @@
+AGENT_TOOL_NAME = "Agent"
+LEGACY_AGENT_TOOL_NAME = "Task"
+VERIFICATION_AGENT_TYPE = "verification"
+ONE_SHOT_BUILTIN_AGENT_TYPES = {"Explore", "Plan"}
+

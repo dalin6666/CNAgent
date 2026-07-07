@@ -1,0 +1,12 @@
+from __future__ import annotations
+
+"""Auto-generated Python mirror of `D:/code_project/claude-code-main/tools/BriefTool/upload.ts`."""
+
+from typing import Any
+from .._mirror import placeholder_class, placeholder_function
+
+SOURCE_PATH = r"D:/code_project/claude-code-main/tools/BriefTool/upload.ts"
+__all__ = ['BriefUploadContext', 'uploadBriefAttachment']
+
+BriefUploadContext = dict[str, Any]
+uploadBriefAttachment = placeholder_function('uploadBriefAttachment', SOURCE_PATH)

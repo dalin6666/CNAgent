@@ -1,0 +1,2 @@
+# Requires Python >= 3.10 (Python 3.12 recommended).
+httpx>=0.27,<1
