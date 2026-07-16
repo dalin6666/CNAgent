@@ -20,29 +20,14 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from agent_runtime import (
-    ModelPolicy,
-    RuntimeConfig,
-    SessionState,
-    create_default_runtime,
-    deepseek_provider_config,
-    openai_provider_config,
-    qwen_provider_config,
+from agent_runtime import SessionState
+from agent_runtime.application import (
+    ALL_TOOL_GROUPS,
+    build_runtime_from_env,
+    new_session,
+    prepare_next_run,
 )
 from agent_runtime.events import RuntimeEvent
-
-
-ALL_TOOL_GROUPS = {
-    "read",
-    "lookup",
-    "mcp",
-    "exec",
-    "state",
-    "automation",
-    "interactive",
-    "agent",
-    "write",
-}
 
 
 def parse_args() -> argparse.Namespace:
@@ -74,73 +59,22 @@ def parse_args() -> argparse.Namespace:
 
 
 def build_runtime(args: argparse.Namespace):
-    workdir = str(Path(args.workdir).expanduser().resolve())
-    provider_name = args.provider
-
-    if provider_name == "mock":
-        config = RuntimeConfig(
-            working_directory=workdir,
-            allowed_tool_groups=set(ALL_TOOL_GROUPS),
+    try:
+        return build_runtime_from_env(
+            provider=args.provider,
+            model=args.model,
+            workdir=args.workdir,
+            allowed_tool_groups=ALL_TOOL_GROUPS,
         )
-        return create_default_runtime(config)
-
-    api_key_env = {
-        "deepseek": "DEEPSEEK_API_KEY",
-        "qwen": "DASHSCOPE_API_KEY",
-        "openai": "OPENAI_API_KEY",
-    }[provider_name]
-    if not os.getenv(api_key_env):
+    except RuntimeError as exc:
+        api_key_env = {
+            "deepseek": "DEEPSEEK_API_KEY",
+            "qwen": "DASHSCOPE_API_KEY",
+            "openai": "OPENAI_API_KEY",
+        }.get(args.provider, "API_KEY")
         raise SystemExit(
-            f"{provider_name} requires {api_key_env}. "
-            f"Set it in PowerShell with: $env:{api_key_env} = 'your-api-key'"
-        )
-
-    if provider_name == "deepseek":
-        provider = deepseek_provider_config(
-            model=args.model or "deepseek-v4-flash",
-            api_key=os.getenv("DEEPSEEK_API_KEY"),
-            base_url=os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
-        )
-    elif provider_name == "qwen":
-        provider = qwen_provider_config(
-            model=args.model or "qwen-plus",
-            api_key=os.getenv("DASHSCOPE_API_KEY"),
-            base_url=os.getenv(
-                "QWEN_BASE_URL",
-                "https://dashscope.aliyuncs.com/compatible-mode/v1",
-            ),
-        )
-    else:
-        provider = openai_provider_config(
-            model=args.model or "gpt-4.1-mini",
-            api_key=os.getenv("OPENAI_API_KEY"),
-            base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
-        )
-
-    config = RuntimeConfig(
-        working_directory=workdir,
-        model_policy=ModelPolicy(
-            primary_model=provider_name,
-            fallback_models=[],
-            provider_configs={provider_name: provider},
-        ),
-        allowed_tool_groups=set(ALL_TOOL_GROUPS),
-    )
-    return create_default_runtime(config)
-
-
-def new_session(workdir: str) -> SessionState:
-    session = SessionState()
-    session.metadata["working_directory"] = workdir
-    return session
-
-
-def prepare_next_run(session: SessionState) -> None:
-    # AgentRuntime limits turns per stream() call. Keep conversation messages and
-    # usage, while resetting only state that belongs to the previous CLI request.
-    session.turn_count = 0
-    session.continuation_count = 0
-    session.finished = False
+            f"{exc} Set it in PowerShell with: $env:{api_key_env} = 'your-api-key'"
+        ) from exc
 
 
 def print_banner(args: argparse.Namespace, runtime) -> None:

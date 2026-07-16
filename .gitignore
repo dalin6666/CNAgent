@@ -16,3 +16,7 @@ tools/.state/
 .vscode/
 .idea/
 *.log
+*.db
+*.sqlite3
+.coverage
+htmlcov/

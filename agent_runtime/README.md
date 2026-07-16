@@ -84,38 +84,14 @@ The runtime now supports OpenAI-compatible Chat Completions providers through
 Provider setup examples are documented in
 `D:/code_project/python_port/AGENT_PROVIDER_SETUP.md`.
 
-## Interactive Command Line
+## Running the Project
 
-Install the runtime dependency:
+The project has two entry points:
 
-```powershell
-python -m pip install -r requirements.txt
-```
+- CLI: `examples/run_cli_agent.py`
+- Web: `web.app:app`, started with Uvicorn
 
-Configure your DeepSeek API key and start the command-line interface:
-
-```powershell
-$env:DEEPSEEK_API_KEY = "sk-..."
-python examples\run_cli_agent.py
-```
-
-DeepSeek is the default provider and uses `deepseek-v4-flash`. You can also set
-the provider and model explicitly:
-
-```powershell
-$env:AGENT_PROVIDER = "deepseek"
-$env:DEEPSEEK_API_KEY = "sk-..."
-$env:AGENT_MODEL = "deepseek-v4-flash"
-python examples\run_cli_agent.py
-```
-
-To run locally without an API key, select the built-in mock provider explicitly:
-
-```powershell
-python examples\run_cli_agent.py --provider mock
-```
-
-The CLI is a presentation layer over the existing `AgentRuntime.stream()` API.
-It keeps the same runtime, provider, tool, permission, context, and telemetry
-logic. Available commands are `/help`, `/new`, `/status`, `/verbose`, and
-`/exit`.
+For installation, environment variables, user creation, CLI commands, and Web
+startup, see the project-level [README.md](../README.md). The CLI is a
+presentation layer over `AgentRuntime.stream()` and the Web service reuses the
+same runtime with the restricted `read` and `lookup` tool groups.
