@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>登录 | CNAgent</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}">
+  <script src="{{ url_for('static', path='/login.js') }}" defer></script>
+</head>
+<body class="auth-page">
+  <main class="auth-shell" aria-labelledby="login-title">
+    <aside class="brand-panel">
+      <div class="brand-lockup">
+        <span class="brand-mark" aria-hidden="true">
+          <img src="{{ url_for('static', path='/icons/bot.svg') }}" alt="">
+        </span>
+        <div>
+          <strong>CNAgent</strong>
+          <span>Agent Runtime Console</span>
+        </div>
+      </div>
+      <div class="brand-copy">
+        <p class="eyebrow">WORKSPACE ACCESS</p>
+        <h2>连接你的智能体工作台</h2>
+      </div>
+      <div class="brand-footer" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+    </aside>
+
+    <section class="login-panel">
+      <div class="form-heading">
+        <p class="eyebrow">WELCOME BACK</p>
+        <h1 id="login-title">登录 CNAgent</h1>
+        <p>使用已创建的账号继续</p>
+      </div>
+
+      {% if error %}
+      <div class="alert" role="alert">
+        <span class="alert-mark" aria-hidden="true">!</span>
+        <span>{{ error }}</span>
+      </div>
+      {% endif %}
+
+      <form class="login-form" method="post" action="{{ url_for('login_submit') }}" data-login-form>
+        <div class="field-group">
+          <label for="username">账号</label>
+          <div class="input-shell">
+            <img src="{{ url_for('static', path='/icons/user.svg') }}" alt="" aria-hidden="true">
+            <input
+              id="username"
+              name="username"
+              type="text"
+              value="{{ username }}"
+              maxlength="64"
+              autocomplete="username"
+              placeholder="请输入账号"
+              required
+              autofocus
+            >
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="password">密码</label>
+          <div class="input-shell">
+            <img src="{{ url_for('static', path='/icons/lock-keyhole.svg') }}" alt="" aria-hidden="true">
+            <input
+              id="password"
+              name="password"
+              type="password"
+              maxlength="256"
+              autocomplete="current-password"
+              placeholder="请输入密码"
+              required
+            >
+            <button
+              class="icon-button password-toggle"
+              type="button"
+              aria-label="显示密码"
+              title="显示密码"
+              data-password-toggle
+              data-show-icon="{{ url_for('static', path='/icons/eye.svg') }}"
+              data-hide-icon="{{ url_for('static', path='/icons/eye-off.svg') }}"
+            >
+              <img src="{{ url_for('static', path='/icons/eye.svg') }}" alt="" aria-hidden="true">
+            </button>
+          </div>
+        </div>
+
+        <button class="primary-button" type="submit" data-submit-button>
+          <img src="{{ url_for('static', path='/icons/log-in.svg') }}" alt="" aria-hidden="true">
+          <span data-button-label>登录</span>
+        </button>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

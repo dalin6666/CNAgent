@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>工作台 | CNAgent</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}">
+  <script src="{{ url_for('static', path='/chat.js') }}" defer></script>
+</head>
+<body class="workspace-page">
+  <header class="workspace-header">
+    <a class="workspace-brand" href="{{ url_for('home') }}" aria-label="CNAgent 首页">
+      <span class="workspace-mark" aria-hidden="true">
+        <img src="{{ url_for('static', path='/icons/bot-dark.svg') }}" alt="">
+      </span>
+      <strong>CNAgent</strong>
+    </a>
+    <div class="account-actions">
+      <span class="account-name">{{ user.username }}</span>
+      <button class="secondary-button reset-button" type="button" title="新会话" data-reset-chat>
+        <span>新会话</span>
+      </button>
+      <form method="post" action="{{ url_for('logout') }}">
+        <button class="secondary-button" type="submit" title="退出登录">
+          <img src="{{ url_for('static', path='/icons/log-out.svg') }}" alt="" aria-hidden="true">
+          <span>退出登录</span>
+        </button>
+      </form>
+    </div>
+  </header>
+
+  <main class="workspace-main chat-main">
+    <section class="chat-shell" aria-labelledby="chat-title">
+      <div class="chat-heading">
+        <div>
+          <p class="eyebrow">CNAGENT WORKSPACE</p>
+          <h1 id="chat-title">欢迎回来，{{ user.username }}</h1>
+        </div>
+        <span class="provider-pill">DeepSeek / Agent Runtime</span>
+      </div>
+
+      <div class="message-list" data-message-list aria-live="polite">
+        <article class="message assistant-message">
+          <div class="message-role">CNAgent</div>
+          <div class="message-content">登录已完成。你可以直接输入需求，我会通过 Agent Runtime 调用模型处理。</div>
+        </article>
+      </div>
+
+      <form class="chat-form" data-chat-form>
+        <label class="sr-only" for="chat-message">输入消息</label>
+        <textarea
+          id="chat-message"
+          name="message"
+          rows="3"
+          maxlength="4000"
+          placeholder="输入你的问题，例如：帮我分析这个项目的运行方式"
+          required
+          data-chat-input
+        ></textarea>
+        <button class="primary-button send-button" type="submit" data-chat-submit>
+          <span data-send-label>发送</span>
+        </button>
+      </form>
+    </section>
+  </main>
+</body>
+</html>
