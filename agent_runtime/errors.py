@@ -21,6 +21,10 @@ class ToolPermissionError(AgentRuntimeError):
     pass
 
 
+class PathOutsideWorkspaceError(AgentRuntimeError, ValueError):
+    pass
+
+
 class ToolExecutionError(AgentRuntimeError):
     pass
 
