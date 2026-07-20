@@ -2,26 +2,54 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from ..errors import PathOutsideWorkspaceError
 from ..schemas import FileSnapshot, SessionState, ToolResult, ToolStreamDelta
 
 
 @dataclass(slots=True)
 class ToolRuntimeContext:
     session: SessionState
-    working_directory: str
+    working_directory: str  # 工作目录，相对目录的起点
     config: Any
     telemetry: Any
     interrupt_controller: Any
+    workspace_root: str | Path | None = None
+    _workspace_root: Path = field(init=False, repr=False)  # 初始化后确认的根工作空间目录
 
-    def resolve_path(self, path: str | Path) -> Path:
-        candidate = Path(path).expanduser()
-        if candidate.is_absolute():
-            return candidate.resolve()
-        return Path(self.working_directory, candidate).resolve()
+    # data类初始化
+    def __post_init__(self) -> None:
+        root = Path(self.workspace_root or self.working_directory).expanduser().resolve(
+            strict=False
+        )
+        current = Path(self.working_directory).expanduser().resolve(strict=False)
+        if not current.is_relative_to(root):
+            raise PathOutsideWorkspaceError(
+                f"Working directory is outside the workspace: {current}. "
+                f"Workspace root: {root}"
+            )
+        self._workspace_root = root
+        self.workspace_root = str(root)
+        self.working_directory = str(current)
+
+    def resolve_path(self, path: str | Path) -> Path:  # 用户请求访问的目标目录
+        root = self._workspace_root
+        current = Path(self.working_directory).expanduser().resolve(strict=False)
+        candidate = Path(path).expanduser()  # 展开用户的主目录符号~
+        candidate = candidate if candidate.is_absolute() else current / candidate
+        resolved = candidate.resolve(strict=False)  # 消除.、处理..并解析符号链接
+
+        # 必须酰拼接，在resolve(),然后检查
+        if not resolved.is_relative_to(root):
+            raise PathOutsideWorkspaceError(
+                f"Path is outside the workspace: {path!s}. "
+                # path!s输出绝对内容
+                f"Workspace root: {root}"
+            )
+        return resolved
 
     def set_working_directory(self, path: str | Path) -> str:
         resolved = str(self.resolve_path(path))

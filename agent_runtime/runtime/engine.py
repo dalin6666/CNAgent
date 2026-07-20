@@ -6,6 +6,7 @@ from pathlib import Path
 
 from ..config import RuntimeConfig
 from ..errors import (
+    PathOutsideWorkspaceError,
     ProviderExecutionError,
     PromptTooLongError,
     ToolExecutionError,
@@ -70,6 +71,10 @@ class AgentRuntime:
         interrupt_controller: InterruptController | None = None,
     ) -> None:
         self.config = config or RuntimeConfig()
+        # 设置根目录
+        self._workspace_root = Path(self.config.working_directory).expanduser().resolve(
+            strict=False
+        )
         self.providers = providers or [MockModelProvider(self.config.model_policy.primary_model)]
         self.tool_registry = tool_registry or ToolRegistry()
         self.permission_manager = permission_manager or PermissionManager(
@@ -102,7 +107,7 @@ class AgentRuntime:
         telemetry = TelemetryRecorder(self.config.log_dir, session.session_id)
         session.metadata.setdefault(
             "working_directory",
-            str(Path(self.config.working_directory).resolve()),
+            str(self._workspace_root),
         )
 
         yield RuntimeEvent(
@@ -457,13 +462,6 @@ class AgentRuntime:
         self.permission_manager.ensure_allowed(tool.name, tool.permission_group)
         run_arguments = dict(arguments)
         run_arguments["_tool_call_id"] = tool_call_id
-        context = ToolRuntimeContext(
-            session=session,
-            working_directory=self._session_working_directory(session),
-            config=self.config,
-            telemetry=telemetry,
-            interrupt_controller=self.interrupt_controller,
-        )
 
         start = time.perf_counter()
         telemetry.emit("tool_started", tool=tool_name, arguments=run_arguments)
@@ -473,6 +471,14 @@ class AgentRuntime:
             data={"tool": tool_name, "arguments": arguments},
         )
         try:
+            context = ToolRuntimeContext(
+                session=session,
+                working_directory=self._session_working_directory(session),
+                workspace_root=self._workspace_root,
+                config=self.config,
+                telemetry=telemetry,
+                interrupt_controller=self.interrupt_controller,
+            )
             last_result: ToolResult | None = None
             async for item in tool.stream(run_arguments, context):
                 self.interrupt_controller.raise_if_interrupted()
@@ -602,11 +608,16 @@ class AgentRuntime:
         return ""
 
     def _session_working_directory(self, session: SessionState) -> str:
-        return str(
-            Path(
-                session.metadata.get("working_directory", self.config.working_directory)
-            ).resolve()
-        )
+        root = self._workspace_root
+        current = Path(
+            session.metadata.get("working_directory", self.config.working_directory)
+        ).expanduser().resolve(strict=False)
+        if not current.is_relative_to(root):
+            raise PathOutsideWorkspaceError(
+                f"Session working directory is outside the workspace: {current}. "
+                f"Workspace root: {root}"
+            )
+        return str(current)
 
     def _record_assistant_tool_call(
         self,
